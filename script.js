@@ -1,7 +1,11 @@
-// Basic Tamil practice app: flashcards + quiz
-// Dataset: vowels and consonants with transliteration 
-const LETTERS = [
-  // Vowels
+// Tamil Unicode Mapping Helper Functions
+const vowelMarks = {
+  'ா': 'aa', 'ி': 'i', 'ீ': 'ii', 'ு': 'u', 'ூ': 'uu',
+  'ெ': 'ae', 'ே': 'aey', 'ை': 'ai', 'ொ': 'oh', 'ோ': 'ohh', 'ௌ': 'au'
+};
+
+// Base vowels (உயிர் எழுத்துக்கள்)
+const vowels = [
   {char: 'அ', translit: 'a', type: 'vowel'},
   {char: 'ஆ', translit: 'aa', type: 'vowel'},
   {char: 'இ', translit: 'i', type: 'vowel'},
@@ -13,26 +17,81 @@ const LETTERS = [
   {char: 'ஐ', translit: 'ai', type: 'vowel'},
   {char: 'ஒ', translit: 'oh', type: 'vowel'},
   {char: 'ஓ', translit: 'ohh', type: 'vowel'},
-  {char: 'ஔ', translit: 'au', type: 'vowel'},
-  // Consonants (common set)
-  {char: 'க்', translit: 'ik', type: 'consonant'},
-  {char: 'ங்', translit: 'ing', type: 'consonant'},
-  {char: 'ச்', translit: 'ich', type: 'consonant'},
-  {char: 'ஞ்', translit: 'nj', type: 'consonant'},
-  {char: 'ட்', translit: 'iṭ', type: 'consonant'},
-  {char: 'ண்', translit: 'iṇ', type: 'consonant'},
-  {char: 'த்', translit: 'it', type: 'consonant'},
-  {char: 'ந்', translit: 'in', type: 'consonant'},
-  {char: 'ப்', translit: 'ip', type: 'consonant'},
-  {char: 'ம்', translit: 'im', type: 'consonant'},
-  {char: 'ய்', translit: 'iy', type: 'consonant'},
-  {char: 'ர்', translit: 'ir', type: 'consonant'},
-  {char: 'ல்', translit: 'il', type: 'consonant'},
-  {char: 'வ்', translit: 'iv', type: 'consonant'},
-  {char: 'ழ்', translit: 'izh', type: 'consonant'},
-  {char: 'ள்', translit: 'iḷ', type: 'consonant'},
-  {char: 'ற்', translit: 'iṟ', type: 'consonant'},
-  {char: 'ன்', translit: 'iṉ', type: 'consonant'}
+  {char: 'ஔ', translit: 'au', type: 'vowel'}
+];
+
+// Base consonants (மெய் எழுத்துக்கள்)
+const consonants = [
+  {char: 'க்', translit: 'k', type: 'consonant', base: 'க'},
+  {char: 'ங்', translit: 'ng', type: 'consonant', base: 'ங'},
+  {char: 'ச்', translit: 'ch', type: 'consonant', base: 'ச'},
+  {char: 'ஞ்', translit: 'nj', type: 'consonant', base: 'ஞ'},
+  {char: 'ட்', translit: 'ṭ', type: 'consonant', base: 'ட'},
+  {char: 'ண்', translit: 'ṇ', type: 'consonant', base: 'ண'},
+  {char: 'த்', translit: 'th', type: 'consonant', base: 'த'},
+  {char: 'ந்', translit: 'n', type: 'consonant', base: 'ந'},
+  {char: 'ப்', translit: 'p', type: 'consonant', base: 'ப'},
+  {char: 'ம்', translit: 'm', type: 'consonant', base: 'ம'},
+  {char: 'ய்', translit: 'y', type: 'consonant', base: 'ய'},
+  {char: 'ர்', translit: 'r', type: 'consonant', base: 'ர'},
+  {char: 'ல்', translit: 'l', type: 'consonant', base: 'ல'},
+  {char: 'வ்', translit: 'v', type: 'consonant', base: 'வ'},
+  {char: 'ழ்', translit: 'zh', type: 'consonant', base: 'ழ'},
+  {char: 'ள்', translit: 'ḷ', type: 'consonant', base: 'ள'},
+  {char: 'ற்', translit: 'ṟ', type: 'consonant', base: 'ற'},
+  {char: 'ன்', translit: 'ṉ', type: 'consonant', base: 'ன'}
+];
+
+// Grantha consonants (கிரந்த எழுத்துக்கள்)
+const granthaConsonants = [
+  {char: 'ஜ்', translit: 'j', type: 'grantha', base: 'ஜ'},
+  {char: 'ஷ்', translit: 'sh', type: 'grantha', base: 'ஷ'},
+  {char: 'ஸ்', translit: 's', type: 'grantha', base: 'ஸ'},
+  {char: 'ஹ்', translit: 'h', type: 'grantha', base: 'ஹ'},
+  {char: 'க்ஷ்', translit: 'ksh', type: 'grantha', base: 'க்ஷ'}
+];
+
+// Generate uyirmei combinations for a consonant
+function generateUyirmeiForConsonant(cons) {
+  const combinations = [];
+  // Add the basic consonant (with pulli)
+  combinations.push({
+    char: cons.char,
+    translit: cons.translit,
+    type: cons.type === 'grantha' ? 'grantha-combo' : 'uyirmei'
+  });
+  
+  // Generate combinations with vowel marks
+  // First combination is with 'a' (removing pulli)
+  combinations.push({
+    char: cons.base,
+    translit: cons.translit + 'a',
+    type: cons.type === 'grantha' ? 'grantha-combo' : 'uyirmei'
+  });
+  
+  // Rest of the combinations with vowel marks
+  Object.entries(vowelMarks).forEach(([mark, vowelTranslit]) => {
+    combinations.push({
+      char: cons.base + mark,
+      translit: cons.translit + vowelTranslit,
+      type: cons.type === 'grantha' ? 'grantha-combo' : 'uyirmei'
+    });
+  });
+  
+  return combinations;
+}
+
+// Generate all combinations
+const uyirmeiCombos = consonants.flatMap(generateUyirmeiForConsonant);
+const granthaCombos = granthaConsonants.flatMap(generateUyirmeiForConsonant);
+
+// Complete letter set
+const LETTERS = [
+  ...vowels,              // 12 vowels
+  ...consonants,          // 18 consonants
+  ...granthaConsonants,   // 5 grantha consonants
+  ...uyirmeiCombos,       // 18 consonants × 12 forms = 216 combinations
+  ...granthaCombos        // 5 grantha × 12 forms = 60 combinations
 ];
 
 // State
@@ -60,9 +119,14 @@ const elQuizSkip = document.getElementById('quiz-skip');
 const elQuizEnd = document.getElementById('quiz-end');
 
 function buildPool(subset){
-  if(subset === 'vowels') return LETTERS.filter(l=>l.type==='vowel');
-  if(subset === 'consonants') return LETTERS.filter(l=>l.type==='consonant');
-  return LETTERS.slice();
+  switch(subset) {
+    case 'vowels': return LETTERS.filter(l => l.type === 'vowel');
+    case 'consonants': return LETTERS.filter(l => l.type === 'consonant');
+    case 'uyirmei': return LETTERS.filter(l => l.type === 'uyirmei');
+    case 'grantha': return LETTERS.filter(l => l.type === 'grantha');
+    case 'grantha-combo': return LETTERS.filter(l => l.type === 'grantha-combo');
+    default: return LETTERS.slice();
+  }
 }
 
 function shuffle(a){
@@ -169,9 +233,9 @@ elQuizEnd.addEventListener('click', endQuiz);
 document.addEventListener('keydown', (e)=>{
   if(document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'SELECT') return;
   if(mode !== 'flash') return;
-  if(e.key === 'n') next();
-  if(e.key === 'p') prev();
-  if(e.key === 'r') reveal();
+  if(e.key === 'd') next();
+  if(e.key === 'a') prev();
+  if(e.key === 's') reveal();
 });
 
 // Auto-start with all+flash on load
